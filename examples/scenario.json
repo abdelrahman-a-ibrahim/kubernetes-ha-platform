@@ -1,0 +1,6 @@
+{
+  "fault": "node-loss",
+  "target": "lab-worker-1",
+  "scope": "disposable-local-cluster",
+  "writes_in_flight": true
+}
