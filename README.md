@@ -1,123 +1,97 @@
-# High Availability Kubernetes Lab
+# Kubernetes HA Platform
 
-**Cluster, storage and networking failure domains**
+A Kubernetes platform design combining workload availability, ingress, service networking and persistent storage.
 
-> Status: foundation only / implementation not started. Independent educational project by Abdelrahman Ahmed. This repository is not a reconstruction of employer systems, a production deployment or proof of completed work.
+**Status: In development** · Personal project by Abdelrahman Ahmed
 
-## The engineering challenge
+## Overview
 
-Build a local multi-node Kubernetes experiment for WorkshopHub with ingress, MetalLB and Longhorn. Describe which host, disk and network failures the lab can simulate and which it cannot.
+A platform for deploying stateful and stateless workloads with documented failure domains and recovery procedures. The design brings together Kubernetes placement controls, ingress, MetalLB and Longhorn, with availability claims tied to the topology actually tested.
 
-This is a capstone for an experienced engineer. The goal is to defend tradeoffs, investigate failure and produce reproducible evidence, not just get a happy-path demo running.
+## Current state
 
-**Technical focus:** Kubernetes · Longhorn · MetalLB · Ingress · Linux · Availability.
+The repository currently contains the system design, delivery requirements, a synthetic input fixture and initial Python interfaces. Runtime behavior, service integrations and deployment are planned. Interface methods raise `NotImplementedError`; there is no running application or published runtime benchmark yet.
 
-## What exists in this first commit
+## Planned capabilities
 
-- A project-specific architecture brief and decision questions.
-- Five implementation milestones with explicit review gates.
-- Failure experiments and acceptance criteria.
-- Typed Python interface scaffolds. Methods deliberately raise `NotImplementedError`.
-- One synthetic scenario fixture; it is an input, not a successful output or benchmark.
-- Evidence and journal templates, an issue template, and syntax/JSON foundation checks.
+- Documented cluster topology and independent failure-domain assumptions.
+- Workload replication, health probes, placement controls and disruption budgets.
+- Ingress and MetalLB service exposure.
+- Longhorn storage integration with backup and restoration workflows.
+- Availability and recovery verification during node and storage failures.
 
-## What you will build
+Detailed scope is tracked in the [delivery roadmap](docs/roadmap.md) and [requirements](docs/requirements.md).
 
-1. Write a topology and failure-domain plan. Compare a local virtual-node cluster with a cluster across physical hosts; document limits on HA evidence.
-2. Bootstrap a supported cluster and verify host/storage prerequisites. Choose a compatible CNI and reserve a non-conflicting MetalLB address pool.
-3. Deploy ingress and an application with readiness, resource limits, topology spread and a disruption budget. Test graceful shutdown.
-4. Add Longhorn only where node privileges and storage prerequisites are satisfied. Run volume replica, detach/attach and restore exercises.
-5. Measure availability during node loss, network disruption and storage failure. Record RTO/RPO observations, backup locations and cleanup.
-
-## Start here
-
-1. Read [the architecture brief](docs/architecture.md) and record the first decision in [ADR 0001](docs/adr/0001-system-boundaries.md).
-2. Inspect [the synthetic scenario](examples/scenario.json) and [the interface boundary](src/high_availability_kubernetes_lab/interfaces.py).
-3. Run the foundation checks from the repository root:
-
-   ```sh
-   python3 tools/check_foundation.py
-   ```
-
-   Python 3.9+ is sufficient for these standard-library checks. They parse Python and JSON; they do **not** validate runtime behavior, deployment safety, protocol compliance or completion.
-4. Create a feature branch, implement milestone 1 and add behavior tests before adapters.
-5. Follow [the milestone backlog](docs/milestones.md). Select and pin implementation dependencies when you introduce them; none are installed by this scaffold.
-6. Complete [the failure lab](docs/failure-lab.md), gather [evidence](docs/evidence/README.md) and review [acceptance criteria](docs/acceptance.md).
-
-There is deliberately no `deploy`, `apply`, paid API call, installed cloud SDK or working runtime in this initial commit.
-
-## Architecture at a glance
+## Architecture
 
 ```text
-Client -> lab network / MetalLB -> Ingress -> replicated application
+Client -> development environment network / MetalLB -> Ingress -> replicated application
                                                    |
                                           persistent storage / Longhorn
 ```
 
-This is a proposed lab architecture. [The design brief](docs/architecture.md) identifies decisions still to make.
+This is the proposed component design. See [architecture](docs/architecture.md) for boundaries and [architecture decisions](docs/adr/0001-system-boundaries.md) for the choices still to resolve.
 
-## Learning prerequisites
+## Technology direction
 
-- `application-engineering-lab` (a suggested learning prerequisite; no runtime dependency is wired in)
+Kubernetes · Longhorn · MetalLB · Ingress · Linux · Availability.
 
-Repositories are separate and can evolve independently. If you connect them later, exchange versioned fixtures or contracts; do not rely on sibling-relative imports. You can implement a standalone synthetic adapter first.
+These technologies describe the intended implementation. Dependencies and compatible versions will be pinned when introduced. Optional services are not required by the current source checks.
 
-## What makes this substantial
+## Working with the source
 
-- Local cluster versus independent physical failure domains
-- Storage replication versus backup
-- Ingress and address-pool constraints
+```sh
+git clone https://github.com/abdelrahman-a-ibrahim/kubernetes-ha-platform.git
+cd kubernetes-ha-platform
+python3 tools/check_project.py
+```
 
-You must explain what happens on retries, partial failure, concurrent operations and recovery. Record what your test environment cannot prove. No result is accepted simply because a dashboard is green.
+Python 3.9+ is sufficient for the current standard-library source check. It parses Python and JSON and checks required project files. It does **not** run an application, validate deployment behavior or establish feature completion.
 
-## Definition of done
+The initial application boundary is in [`src/kubernetes_ha_platform/interfaces.py`](src/kubernetes_ha_platform/interfaces.py). [`examples/scenario.json`](examples/scenario.json) provides a synthetic development input. Installation and runtime commands will be added with the first executable release.
+
+## Quality and reliability
 
 - Availability report includes placement, hardware assumptions and observed errors.
 - Storage recovery is tested rather than inferred from a replica count.
 - Ingress remains reachable for faults the topology actually tolerates.
 - A backup can be restored; a disruption budget is not described as preventing involuntary failures.
 
-Also supply installation/reproduction instructions, dependency versions, meaningful behavior tests, cleanup instructions, an architecture decision log and evidence from a repeatable demonstration. A checklist or syntax check alone does not satisfy completion.
+These are acceptance targets. Failure scenarios are specified in [reliability verification](docs/reliability.md); [results](docs/verification/README.md) will be recorded as implementation progresses. Correctness and performance claims must reference an actual environment, workload and commit.
 
-## Advanced extensions
+## Development roadmap
 
-- Linux compatibility preflight tool
-- Restore to a new cluster
-- Network-policy isolation experiments
-- Latency measurement during storage rebuild
+- [ ] Contracts and system boundaries
+- [ ] Core implementation and behavior tests
+- [ ] External adapters and scoped access
+- [ ] Failure recovery and operational visibility
+- [ ] Reproducible deployment and release validation
 
-Extensions follow a working baseline; they are not requirements for the first milestone.
+See [delivery stages and future scope](docs/roadmap.md). For deployment prerequisites and resource lifecycle, see [operations](docs/operations.md).
 
-## Boundaries and costs
+## Repository structure
 
-Use fictional services, synthetic inputs and a disposable sandbox. Do not copy employer repositories, runbooks, tickets, customer data, credentials or internal architecture. Real cloud/provider adapters are future work and may incur costs; [the operations plan](docs/operations.md) must identify account, region, budget, resource inventory and teardown before deployment. Budget alerts notify; they do not constitute a hard spending cap.
+```text
+src/kubernetes_ha_platform/       Initial application interfaces
+examples/                  Synthetic development inputs
+tests/                     Behavior verification plan
+docs/architecture.md       Component design and boundaries
+docs/requirements.md       Functional and quality requirements
+docs/roadmap.md            Delivery stages and future scope
+docs/reliability.md        Failure and recovery scenarios
+docs/operations.md         Runtime and deployment plan
+docs/verification/         Results as implementation progresses
+tools/check_project.py     Source integrity check
+```
 
-## Publishable evidence, when earned
+## Development
 
-A completed lab may support a portfolio case study labeled **independent project**. Share your original code, sanitized diagrams, measured results and a failure/recovery write-up. Employer experience and personal lab evidence remain separate. Never copy illustrative fixture values into a results claim.
+Use focused feature branches, add behavior tests with implementation changes and update the relevant architecture decision when guarantees change. Read [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Primary references
+This is an independent personal project. Examples use synthetic data. See [NOTICE.md](NOTICE.md) for licensing status.
+
+## References
 
 - https://kubernetes.io/docs/concepts/workloads/pods/disruptions/
 - https://longhorn.io/docs/
 - https://metallb.io/
-
-Read current official documentation when selecting SDKs, images, tool versions and integrations. The scaffold intentionally does not guess compatible version combinations.
-
-## Repository map
-
-- `src/high_availability_kubernetes_lab/interfaces.py`
-- `examples/scenario.json`
-- `docs/architecture.md`
-- `docs/milestones.md`
-- `docs/failure-lab.md`
-- `docs/acceptance.md`
-- `docs/learning-journal.md`
-- `docs/evidence/README.md`
-- `docs/operations.md` — local/cloud boundaries and teardown plan.
-- `docs/adr/` — decisions and alternatives.
-- `tools/check_foundation.py` — syntax and fixture integrity only.
-
-## Working agreement
-
-Keep commits focused: `docs`, `feat`, `test`, `fix`, `ops`. Work on a feature branch and merge only after the milestone review. Consult [CONTRIBUTING.md](CONTRIBUTING.md). No open-source license has been chosen yet; see [NOTICE.md](NOTICE.md).
